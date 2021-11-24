@@ -1,24 +1,56 @@
 import numpy as np
 
 
-from .Env import Env
+from .Env import Env, State
 class Connect4(Env):
+    '''
+    Class to represent a connect 4 environment
+
+    Properties
+    ----------
+    state : list<State>
+        List of past states.
+    rewards : list<float>
+        List of past rewards.
+    actions : list<int>
+        List of past actions.
+    T : Bool
+        Whether the environment has terminated.
+    current_state_ : State
+        The current state of the environment.
+
+    Methods
+    -------
+    __init__():
+        Initialise the environment object setting the state, action, rewards records to blank lists and the termination (T) to False.
+
+    step(action):
+        A method that plays a piece in column 'action' recording the states actions and rewards.
+
+    reset():
+        Reset the environment object setting the state, action, rewards records to blank lists, the termination (T) to False and current_state_ to an empty board.
+
+    take_action(action):
+        Plays piece in column 'action' returnin gthe old and new states.
+
+    evaluate(state):
+        Evauates a state returning the reward of the previous action and whether the environment is terminated.
+
+    win_from(frame, column, row):
+        Returns whether there is a win from a specific square for a specific frame.
+
+    from_state(state):
+        Creates a Connect4 environment object with no history but the current_state_ set to a copy of the input state.
+    '''
 
     def __init__(self, state=None):
-        self.current_state_ = state
-        self.T=False
-        self.states = []
-        self.actions = []
-        self.rewards = []
+        super().__init__()
 
     def reset(self):
         state_setup = np.zeros((7,6,3))
         state_setup[:,:,0] = 1
         self.current_state_ = Connect4State(state_setup, 1)
-        self.T=False
-        self.states = []
-        self.actions = []
-        self.rewards = []
+        super().reset()
 
 
     def step(self, action):
@@ -78,6 +110,11 @@ class Connect4(Env):
                 return True
         return False
 
+    @classmethod
+    def from_state(cls, state):
+        env = cls()
+        env.current_state_ = state.copy()
+
         
 
 
@@ -85,10 +122,46 @@ class Connect4(Env):
 
 
 
-class Connect4State():
+class Connect4State(State):
+    '''
+    Class object for a connect 4 state.
 
-    def __init__(self, state_rep, players_turn):
-        self.board = state_rep
+    Properties
+    ----------
+    board : ndarray
+        Numpy array representing the location on the counters.
+    players_turn : int
+        Determines who is to play next.
+
+    Methods
+    -------
+    __init__(state_rep, players_turn):
+        Initialises a state object with given board and players_turn.
+
+    possible_actions():
+        Function that can return a list of possible actions for the state.
+    
+    __hash__():
+        A hash function so that the state can be stored in a dictionary.
+
+    __eq__():
+        Equality method so that states can be compared.
+
+    as_numpy():
+        TBD
+    
+    copy():
+        Creates a new instance that is a copy of this state.
+
+    print_state():
+        Prints a visual of the state.
+
+    to_env()
+        Creates a Connect 4 environment with current_state_ set to a copy of this State instance.
+    '''
+
+    def __init__(self, board, players_turn):
+        self.board = board
         self.players_turn = players_turn
 
     def as_numpy(self):
@@ -113,7 +186,7 @@ class Connect4State():
             print(to_print)
 
     def to_env(self):
-        return Connect4Environment(state)
+        return Connect4.from_state(state)
 
     def possible_actions(self):
         board = self.board
@@ -123,4 +196,7 @@ class Connect4State():
 
     def __hash__(self):
         return hash(str(self.board)  + str(self.players_turn))
+
+    def __eq__(self, other):
+        return (self.players_turn==other.players_turn) and np.array_equal(self.board, other.board)
 

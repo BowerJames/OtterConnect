@@ -129,6 +129,3 @@ dmypy.json
 .pyre/
 
 .vs
-
-# Stored Data
-/data/
